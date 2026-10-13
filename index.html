@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Performance Matrix Analyzer | MAT2303</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📐</text></svg>">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #1a237e;
+      --primary-dark: #0d1642;
+      --primary-light: #283593;
+      --accent: #3949ab;
+      --accent-teal: #00897b;
+      --accent-amber: #f57f17;
+      --accent-rose: #d81b60;
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-focus: #3949ab;
+      --danger: #e53935;
+      --success: #2e7d32;
+      --radius: 10px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #0d1b4c 0%, #1a237e 50%, #283593 100%);
+      color: #ffffff;
+      padding: 2.2rem 2rem 2rem 2rem;
+      border-bottom: 4px solid var(--accent-teal);
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    .header-container {
+      max-width: 1380px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+      color: #e0e7ff;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      width: fit-content;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-subtitle {
+      font-size: 1.05rem;
+      color: #c7d2fe;
+      font-weight: 400;
+      max-width: 900px;
+    }
+
+    .modules-indicator {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 0.8rem;
+    }
+
+    .module-tag {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #e2e8f0;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1380px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface-alt);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    /* Toolbar & Buttons */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0.55rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease-in-out;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(26, 35, 126, 0.25);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(26, 35, 126, 0.35);
+    }
+
+    .btn-teal {
+      background: linear-gradient(135deg, #00796b 0%, #00897b 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 137, 123, 0.25);
+    }
+
+    .btn-teal:hover:not(:disabled) {
+      background: linear-gradient(135deg, #004d40 0%, #00796b 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .btn-danger {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .btn-icon-only {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.8rem;
+    }
+
+    /* Alerts and Feedback */
+    .alert {
+      padding: 0.9rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      margin-bottom: 1.2rem;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert-danger {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #f87171;
+    }
+
+    .alert-success {
+      background-color: #f0fdf4;
+      color: #166534;
+      border: 1px solid #4ade80;
+    }
+
+    .alert-info {
+      background-color: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+
+    /* Table Styling */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    table.matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      text-align: center;
+      min-width: 650px;
+    }
+
+    table.matrix-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+      padding: 0.75rem 0.6rem;
+      border-bottom: 2px solid var(--border);
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    table.matrix-table th:last-child {
+      border-right: none;
+    }
+
+    table.matrix-table td {
+      padding: 0.45rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    table.matrix-table td:last-child {
+      border-right: none;
+    }
+
+    table.matrix-table tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    .input-cell {
+      width: 100%;
+      min-width: 70px;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      text-align: center;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background: #ffffff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .input-cell:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.15);
+    }
+
+    .input-cell.is-invalid {
+      border-color: var(--danger) !important;
+      background-color: #fff5f5 !important;
+      color: var(--danger) !important;
+    }
+
+    .student-name-input {
+      text-align: left;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* Math Matrix Displays */
+    .math-matrix-wrapper {
+      display: inline-block;
+      margin: 0.5rem 0;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .math-matrix {
+      border-left: 2.5px solid var(--primary);
+      border-right: 2.5px solid var(--primary);
+      border-radius: 4px;
+      padding: 0 4px;
+      border-collapse: separate;
+      border-spacing: 6px 3px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.85rem;
+    }
+
+    .math-matrix td {
+      padding: 3px 6px;
+      text-align: right;
+      background: #f8fafc;
+      border-radius: 3px;
+      border: 1px solid #edf2f7;
+    }
+
+    .pivot-cell {
+      background-color: #dbeafe !important;
+      font-weight: bold;
+      color: #1e40af;
+      border: 1px solid #93c5fd !important;
+    }
+
+    /* Heatmap Table */
+    .heatmap-cell {
+      font-family: monospace;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      border-radius: 3px;
+      transition: transform 0.1s ease;
+    }
+
+    .heatmap-cell:hover {
+      transform: scale(1.08);
+      z-index: 10;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+      padding-bottom: 2px;
+    }
+
+    .tab-btn {
+      padding: 0.65rem 1.2rem;
+      background: transparent;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+      background: #f1f5f9;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: #eef2ff;
+    }
+
+    /* Stage Sections / Accordions */
+    .stage-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .stage-card:hover {
+      border-color: #cbd5e1;
+    }
+
+    .stage-header {
+      padding: 1rem 1.25rem;
+      background: #f8fafc;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      border-left: 4px solid var(--accent);
+    }
+
+    .stage-header:hover {
+      background: #f1f5f9;
+    }
+
+    .stage-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .stage-num {
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .stage-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .stage-module-badge {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .toggle-icon {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .stage-content {
+      padding: 1.25rem;
+      border-top: 1px solid var(--border);
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .stage-card.is-open .stage-content {
+      display: block;
+    }
+
+    .stage-card.is-open .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stage-desc {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 0.75rem 1rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.85rem;
+      color: #15803d;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .stage-desc-accent {
+      background: #f8fafc;
+      border-left: 3px solid var(--accent);
+      color: #334155;
+    }
+
+    /* KPI metric tiles */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .metric-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-top: 3px solid var(--accent);
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .metric-sub {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    /* Loading Spinner */
+    .spinner-wrap {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--primary);
+      padding: 0.5rem 1rem;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(26, 35, 126, 0.2);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Charts Container */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 320px;
+      margin: 1rem 0;
+      background: #ffffff;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header { padding: 1.5rem 1rem; }
+      .header-title { font-size: 1.6rem; }
+      main { padding: 0 0.8rem; }
+      .card-header { flex-direction: column; align-items: stretch; }
+      .toolbar { justify-content: flex-start; }
+      .metrics-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Academic Header -->
+  <header>
+    <div class="header-container">
+      <div class="badge-pill">
+        <span>⚡ MAT2303</span> • <span>Linear Algebra & Vector Calculus</span>
+      </div>
+      <h1 class="header-title">
+        <span>📐 Student Performance Matrix Analyzer</span>
+      </h1>
+      <p class="header-subtitle">
+        Comprehensive 18-stage mathematical pipeline investigating student score vectors across vector spaces, row reductions, spectral decomposition, SVD, PCA, and stochastic Markov chains.
+      </p>
+      <div class="modules-indicator">
+        <span class="module-tag">Module 1: Matrix Theory & LU Factorization</span>
+        <span class="module-tag">Module 2: Vector Spaces, Norms & Gram-Schmidt</span>
+        <span class="module-tag">Module 3: Linear Transformations & SVD</span>
+        <span class="module-tag">Module 4: Markov Chain Dynamics</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Card 1: Data Input & Student Matrix Configuration -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>📝 Student Performance Matrix Input (A ∈ ℝᵐˣⁿ)</span>
+        </div>
+        <div class="toolbar">
+          <button id="btnLoadSample" class="btn btn-secondary">⚡ Load Sample Data</button>
+          <button id="btnAddStudent" class="btn btn-secondary">➕ Add Student</button>
+          <button id="btnRemoveStudent" class="btn btn-secondary">➖ Remove Last</button>
+          <button id="btnClearAll" class="btn btn-danger">🗑️ Clear All</button>
+          <button id="btnRunAnalysis" class="btn btn-primary">🚀 Run Full Analysis</button>
+          <button id="btnDownloadPDF" class="btn btn-teal">📄 Download PDF Report</button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div id="alertBox" class="alert"></div>
+
+        <div id="loadingSpinner" class="spinner-wrap">
+          <div class="spinner"></div>
+          <span>Computing 18-stage Linear Algebra Pipeline via NumPy Engine...</span>
+        </div>
+
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+          Enter individual student scores (0.0 to 100.0) across the 6 curriculum subjects. Real-time validation active.
+        </p>
+
+        <div class="table-container">
+          <table id="inputTable" class="matrix-table">
+            <thead>
+              <tr>
+                <th style="width: 45px;">#</th>
+                <th style="width: 170px; text-align: left;">Student Name</th>
+                <th>Mathematics</th>
+                <th>Physics</th>
+                <th>Chemistry</th>
+                <th>English</th>
+                <th>Computer Science</th>
+                <th>Statistics</th>
+                <th style="width: 65px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="inputTableBody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Card 2: Interactive Linear Algebra Analysis Dashboard -->
+    <section id="resultsSection" class="card" style="display: none;">
+      <div class="card-header">
+        <div class="card-title">
+          <span>📊 Full 18-Stage Linear Algebra Analysis Output</span>
+        </div>
+        <div class="toolbar">
+          <button id="btnExpandAll" class="btn btn-secondary btn-icon-only">Expand All</button>
+          <button id="btnCollapseAll" class="btn btn-secondary btn-icon-only">Collapse All</button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Executive KPI Banner -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Matrix Dimensions</span>
+            <span id="kpiShape" class="metric-value">10 × 6</span>
+            <span class="metric-sub">m Students × n Subjects</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Matrix Rank</span>
+            <span id="kpiRank" class="metric-value">6</span>
+            <span id="kpiRankSub" class="metric-sub">Full Column Rank</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Condition Number κ(A)</span>
+            <span id="kpiCond" class="metric-value">1.00</span>
+            <span class="metric-sub">SVD Stability Indicator</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Top 2 PCs Variance</span>
+            <span id="kpiVariance" class="metric-value">--%</span>
+            <span class="metric-sub">Dimensionality Reduction</span>
+          </div>
+        </div>
+
+        <!-- Filter / Module Navigation Tabs -->
+        <div class="nav-tabs">
+          <button class="tab-btn active" data-target="all">All 18 Stages</button>
+          <button class="tab-btn" data-target="mod1">Module 1: Elimination, Rank & LU (1-6)</button>
+          <button class="tab-btn" data-target="mod2">Module 2: Spaces, Norms & Geometry (7-11)</button>
+          <button class="tab-btn" data-target="mod3">Module 3: Transformations & Spectral (12-17)</button>
+          <button class="tab-btn" data-target="mod4">Module 4: Markov Chain Dynamics (18)</button>
+        </div>
+
+        <!-- STAGE 1: Matrix Formation -->
+        <div class="stage-card is-open" data-module="mod1">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 1</span>
+              <span class="stage-title">Matrix Formation: Student-Performance Matrix A ∈ ℝᵐˣⁿ</span>
+              <span class="stage-module-badge">Module 1</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage1" class="stage-desc"></div>
+            <div id="tableContainerStage1" class="table-container"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 2: Row Echelon Form -->
+        <div class="stage-card" data-module="mod1">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 2</span>
+              <span class="stage-title">Row Echelon Form (REF) via Gaussian Elimination with Partial Pivoting</span>
+              <span class="stage-module-badge">Module 1</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage2" class="stage-desc"></div>
+            <p style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">REF Matrix (Pivot entries highlighted):</p>
+            <div id="tableContainerStage2" class="table-container math-matrix-wrapper"></div>
+            <div style="margin-top: 1rem;">
+              <p style="font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;">Sequential Elementary Row Operations:</p>
+              <ul id="operationsListStage2" style="font-size: 0.8rem; font-family: monospace; background: #f8fafc; padding: 10px 25px; border-radius: 6px; border: 1px solid var(--border); max-height: 160px; overflow-y: auto;"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 3: Reduced Row Echelon Form -->
+        <div class="stage-card" data-module="mod1">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 3</span>
+              <span class="stage-title">Reduced Row Echelon Form (RREF) via Gauss-Jordan Elimination</span>
+              <span class="stage-module-badge">Module 1</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage3" class="stage-desc"></div>
+            <div id="tableContainerStage3" class="table-container math-matrix-wrapper"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 4: Rank Computation -->
+        <div class="stage-card" data-module="mod1">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 4</span>
+              <span class="stage-title">Rank Computation & Structural Dimension</span>
+              <span class="stage-module-badge">Module 1</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage4" class="stage-desc"></div>
+            <div id="rankAnalysisBox" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 5: LU Decomposition -->
+        <div class="stage-card" data-module="mod1">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 5</span>
+              <span class="stage-title">LU Decomposition of Normal Matrix: AᵀA = L · U</span>
+              <span class="stage-module-badge">Module 1</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage5" class="stage-desc"></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
+              <div style="flex: 1; min-width: 280px;">
+                <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">Lower Triangular Matrix L (Unit Diagonal):</p>
+                <div id="tableL" class="math-matrix-wrapper"></div>
+              </div>
+              <div style="flex: 1; min-width: 280px;">
+                <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">Upper Triangular Matrix U:</p>
+                <div id="tableU" class="math-matrix-wrapper"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 6: Linear System -->
+        <div class="stage-card" data-module="mod1">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 6</span>
+              <span class="stage-title">Linear System Solution via Normal Equations: AᵀA x = Aᵀb</span>
+              <span class="stage-module-badge">Module 1</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage6" class="stage-desc"></div>
+            <div id="systemSolutionBox"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 7: Vector Representation & Norms -->
+        <div class="stage-card" data-module="mod2">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 7</span>
+              <span class="stage-title">Student Vectors in Metric Space ℝⁿ & Norms (L₁, L₂, L_∞)</span>
+              <span class="stage-module-badge">Module 2</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage7" class="stage-desc"></div>
+            <div id="tableContainerStage7" class="table-container"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 8: Linear Independence -->
+        <div class="stage-card" data-module="mod2">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 8</span>
+              <span class="stage-title">Linear Independence of Feature Column Vectors & det(AᵀA)</span>
+              <span class="stage-module-badge">Module 2</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage8" class="stage-desc"></div>
+            <div id="independenceBox"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 9: Inner Products & Similarity -->
+        <div class="stage-card" data-module="mod2">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 9</span>
+              <span class="stage-title">Inner Products, Gram Matrix G = AAᵀ & Cosine Similarity Heatmap</span>
+              <span class="stage-module-badge">Module 2</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage9" class="stage-desc"></div>
+            <div style="margin-bottom: 1rem;">
+              <p style="font-size: 0.85rem; font-weight: 700; margin-bottom: 4px;">Pairwise Cosine Similarity Heatmap cos(θ) ∈ [0, 1]:</p>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+                Color gradient: <span style="background: rgba(66, 165, 245, 0.4); padding: 2px 6px; border-radius: 3px;">Lower (Blue)</span> → <span style="background: rgba(255, 183, 77, 0.6); padding: 2px 6px; border-radius: 3px;">Medium</span> → <span style="background: rgba(239, 83, 80, 0.85); color: #fff; padding: 2px 6px; border-radius: 3px;">High Similarity (Red)</span>
+              </div>
+              <div id="tableCosineSim" class="table-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 10: Gram-Schmidt Orthogonalization -->
+        <div class="stage-card" data-module="mod2">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 10</span>
+              <span class="stage-title">Gram-Schmidt Orthogonalization Process (QR Factorization)</span>
+              <span class="stage-module-badge">Module 2</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage10" class="stage-desc"></div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div>
+                <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">Orthonormal Basis Matrix Q (Columns satisfy ⟨qᵢ, qⱼ⟩ = δᵢⱼ):</p>
+                <div id="tableQ" class="math-matrix-wrapper"></div>
+              </div>
+              <div>
+                <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">Upper Triangular Coordinate Matrix R:</p>
+                <div id="tableR" class="math-matrix-wrapper"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 11: Basis & Dimension -->
+        <div class="stage-card" data-module="mod2">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 11</span>
+              <span class="stage-title">Subspace Bases & Rank-Nullity Theorem: dim(Col A) + dim(Null A) = n</span>
+              <span class="stage-module-badge">Module 2</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage11" class="stage-desc"></div>
+            <div id="basisBox" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 12: Linear Transformations -->
+        <div class="stage-card" data-module="mod3">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 12</span>
+              <span class="stage-title">Linear Transformations: Centering, Standardization & Idempotent Projection</span>
+              <span class="stage-module-badge">Module 3</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage12" class="stage-desc"></div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <p style="font-size: 0.85rem; font-weight: 700;">Standardized Score Matrix (Z-scores):</p>
+              <div id="tableStandardized" class="table-container"></div>
+              <p style="font-size: 0.85rem; font-weight: 700;">Projection Matrix P (Satisfies P² = P):</p>
+              <div id="tableProjectionMatrix" class="math-matrix-wrapper"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 13: Eigenvalues & Spectral Analysis -->
+        <div class="stage-card" data-module="mod3">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 13</span>
+              <span class="stage-title">Eigenvalue & Spectral Analysis: det(C - λI) = 0</span>
+              <span class="stage-module-badge">Module 3</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage13" class="stage-desc"></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start;">
+              <div style="flex: 1; min-width: 320px;">
+                <table id="tableEigenvalues" class="matrix-table">
+                  <thead>
+                    <tr>
+                      <th>Component</th>
+                      <th>Eigenvalue (λ)</th>
+                      <th>Variance (%)</th>
+                      <th>Cumulative (%)</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div style="flex: 1; min-width: 320px;">
+                <div class="chart-container">
+                  <canvas id="chartEigenvalues"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 14: Diagonalization -->
+        <div class="stage-card" data-module="mod3">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 14</span>
+              <span class="stage-title">Covariance Diagonalization: C = P · D · P⁻¹</span>
+              <span class="stage-module-badge">Module 3</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage14" class="stage-desc"></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+              <div style="flex: 1; min-width: 280px;">
+                <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">Modal Matrix of Eigenvectors P:</p>
+                <div id="tableDiagP" class="math-matrix-wrapper"></div>
+              </div>
+              <div style="flex: 1; min-width: 280px;">
+                <p style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">Diagonal Matrix D = diag(λ₁,...,λₙ):</p>
+                <div id="tableDiagD" class="math-matrix-wrapper"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 15: Singular Value Decomposition -->
+        <div class="stage-card" data-module="mod3">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 15</span>
+              <span class="stage-title">Singular Value Decomposition (SVD): A = U · Σ · Vᵀ & Low-Rank Approx</span>
+              <span class="stage-module-badge">Module 3</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage15" class="stage-desc"></div>
+            <div id="svdApproximationsBox"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 16: Principal Component Analysis -->
+        <div class="stage-card" data-module="mod3">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 16</span>
+              <span class="stage-title">Principal Component Analysis (PCA) & Scree Plot</span>
+              <span class="stage-module-badge">Module 3</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage16" class="stage-desc"></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start;">
+              <div style="flex: 1; min-width: 320px;">
+                <p style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Principal Component Loadings:</p>
+                <div id="tablePcaLoadings" class="table-container"></div>
+              </div>
+              <div style="flex: 1; min-width: 320px;">
+                <div class="chart-container">
+                  <canvas id="chartScree"></canvas>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+              <p style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Student Coordinates in Principal Subspace (PC Scores):</p>
+              <div id="tablePcaScores" class="table-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAGE 17: Orthogonal Projection -->
+        <div class="stage-card" data-module="mod3">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 17</span>
+              <span class="stage-title">Orthogonal Projection onto Subspace W & Orthogonality Check</span>
+              <span class="stage-module-badge">Module 3</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage17" class="stage-desc"></div>
+            <div id="tableProjections" class="table-container"></div>
+          </div>
+        </div>
+
+        <!-- STAGE 18: Markov Chain Transition Analysis -->
+        <div class="stage-card" data-module="mod4">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <span class="stage-num">Stage 18</span>
+              <span class="stage-title">Markov Chain Grade Progression Modeling & Steady State Equilibrium</span>
+              <span class="stage-module-badge">Module 4</span>
+            </div>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="stage-content">
+            <div id="descStage18" class="stage-desc"></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+              <div style="flex: 1; min-width: 320px;">
+                <p style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Transition Probability Stochastic Matrix P:</p>
+                <div id="tableMarkovP" class="table-container"></div>
+                <div id="markovSteadyStateBox" style="margin-top: 1rem;"></div>
+              </div>
+              <div style="flex: 1; min-width: 320px;">
+                <div class="chart-container">
+                  <canvas id="chartMarkov"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Student Performance Matrix Analyzer</strong> — Mini Project for MAT2303 Linear Algebra & Vector Calculus</p>
+    <p style="margin-top: 4px; font-size: 0.78rem;">Implements Modules 1, 2, and 3 Mathematical Theorems • Developed with Python, NumPy & Flask</p>
+  </footer>
+
+  <!-- Single-Page Application Client JavaScript -->
+  <script>
+    // State management
+    const DEFAULT_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'English', 'Computer Science', 'Statistics'];
+    let studentRows = [];
+    let lastAnalysisResults = null;
+    let chartEigenInstance = null;
+    let chartScreeInstance = null;
+    let chartMarkovInstance = null;
+
+    // Preset realistic sample data (correlated academic abilities)
+    const PRESET_STUDENTS = [
+      { name: 'Alice', scores: [88.5, 84.0, 78.5, 72.0, 91.0, 89.0] },
+      { name: 'Bob', scores: [65.0, 68.0, 62.0, 70.0, 64.0, 66.5] },
+      { name: 'Charlie', scores: [92.0, 95.0, 89.0, 80.0, 96.0, 94.0] },
+      { name: 'Diana', scores: [48.0, 52.0, 55.0, 68.0, 50.0, 49.0] },
+      { name: 'Eve', scores: [76.0, 74.0, 71.0, 85.0, 79.0, 75.0] },
+      { name: 'Frank', scores: [58.0, 60.0, 59.0, 62.0, 56.0, 57.0] },
+      { name: 'Grace', scores: [82.0, 85.0, 80.0, 78.0, 88.0, 84.0] },
+      { name: 'Henry', scores: [95.0, 91.0, 88.0, 84.0, 94.0, 92.0] },
+      { name: 'Iris', scores: [42.0, 45.0, 50.0, 58.0, 44.0, 46.0] },
+      { name: 'Jack', scores: [71.0, 73.0, 69.0, 75.0, 72.0, 70.5] }
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initTable(PRESET_STUDENTS);
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      document.getElementById('btnLoadSample').addEventListener('click', loadSampleData);
+      document.getElementById('btnAddStudent').addEventListener('click', addStudentRow);
+      document.getElementById('btnRemoveStudent').addEventListener('click', removeLastStudent);
+      document.getElementById('btnClearAll').addEventListener('click', clearAllStudents);
+      document.getElementById('btnRunAnalysis').addEventListener('click', runFullAnalysis);
+      document.getElementById('btnDownloadPDF').addEventListener('click', downloadPDFReport);
+
+      document.getElementById('btnExpandAll').addEventListener('click', () => {
+        document.querySelectorAll('.stage-card').forEach(card => card.classList.add('is-open'));
+      });
+
+      document.getElementById('btnCollapseAll').addEventListener('click', () => {
+        document.querySelectorAll('.stage-card').forEach(card => card.classList.remove('is-open'));
+      });
+
+      // Accordion header toggle
+      document.querySelectorAll('.stage-header').forEach(hdr => {
+        hdr.addEventListener('click', () => {
+          const card = hdr.closest('.stage-card');
+          card.classList.toggle('is-open');
+        });
+      });
+
+      // Module tabs filter
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.dataset.target;
+
+          document.querySelectorAll('.stage-card').forEach(card => {
+            if (target === 'all' || card.dataset.module === target) {
+              card.style.display = 'block';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+    }
+
+    function showAlert(msg, type = 'danger') {
+      const el = document.getElementById('alertBox');
+      el.className = `alert alert-${type}`;
+      el.textContent = msg;
+      el.style.display = 'flex';
+      setTimeout(() => { el.style.display = 'none'; }, 6000);
+    }
+
+    function initTable(students) {
+      const tbody = document.getElementById('inputTableBody');
+      tbody.innerHTML = '';
+      studentRows = [];
+
+      students.forEach((st, idx) => {
+        appendTableRow(idx + 1, st.name, st.scores);
+      });
+    }
+
+    function appendTableRow(index, name, scores) {
+      const tbody = document.getElementById('inputTableBody');
+      const tr = document.createElement('tr');
+      tr.dataset.row = index;
+
+      let scoreTds = '';
+      for (let j = 0; j < 6; j++) {
+        const val = (scores && scores[j] !== undefined) ? scores[j] : 70.0;
+        scoreTds += `
+          <td>
+            <input type="number" class="input-cell score-input" data-col="${j}"
+                   min="0" max="100" step="0.1" value="${val}" required />
+          </td>
+        `;
+      }
+
+      tr.innerHTML = `
+        <td style="font-weight: 600; color: var(--text-muted);">${index}</td>
+        <td>
+          <input type="text" class="input-cell student-name-input" value="${name || 'Student ' + index}" required />
+        </td>
+        ${scoreTds}
+        <td>
+          <button class="btn btn-danger btn-icon-only" onclick="deleteTableRow(this)" title="Delete Row">✕</button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+
+      // Attach validation handlers
+      tr.querySelectorAll('.score-input').forEach(input => {
+        input.addEventListener('input', () => validateCell(input));
+      });
+    }
+
+    function validateCell(input) {
+      const val = parseFloat(input.value);
+      if (isNaN(val) || val < 0 || val > 100) {
+        input.classList.add('is-invalid');
+        return false;
+      } else {
+        input.classList.remove('is-invalid');
+        return true;
+      }
+    }
+
+    function addStudentRow() {
+      const tbody = document.getElementById('inputTableBody');
+      const nextIndex = tbody.children.length + 1;
+      appendTableRow(nextIndex, `Student ${nextIndex}`, [75, 75, 75, 75, 75, 75]);
+    }
+
+    function removeLastStudent() {
+      const tbody = document.getElementById('inputTableBody');
+      if (tbody.children.length <= 2) {
+        showAlert("At least 2 students are required for matrix operations.", "danger");
+        return;
+      }
+      tbody.removeChild(tbody.lastElementChild);
+    }
+
+    function deleteTableRow(btn) {
+      const tbody = document.getElementById('inputTableBody');
+      if (tbody.children.length <= 2) {
+        showAlert("Cannot remove student. At least 2 students are required for matrix operations.", "danger");
+        return;
+      }
+      btn.closest('tr').remove();
+      // Renumber rows
+      Array.from(tbody.children).forEach((tr, i) => {
+        tr.children[0].textContent = i + 1;
+      });
+    }
+
+    function clearAllStudents() {
+      if (confirm("Clear all student entries?")) {
+        const tbody = document.getElementById('inputTableBody');
+        tbody.innerHTML = '';
+        appendTableRow(1, "Student 1", [0, 0, 0, 0, 0, 0]);
+        appendTableRow(2, "Student 2", [0, 0, 0, 0, 0, 0]);
+      }
+    }
+
+    async function loadSampleData() {
+      try {
+        const res = await fetch('/sample-data');
+        const json = await res.json();
+        if (json.success) {
+          const list = json.students.map((name, i) => ({
+            name: name,
+            scores: json.matrix[i]
+          }));
+          initTable(list);
+          showAlert("Loaded realistic correlated sample dataset successfully!", "success");
+        } else {
+          initTable(PRESET_STUDENTS);
+          showAlert("Loaded client default sample data.", "info");
+        }
+      } catch (err) {
+        initTable(PRESET_STUDENTS);
+        showAlert("Loaded client default sample data.", "info");
+      }
+    }
+
+    function extractMatrixFromUI() {
+      const rows = document.querySelectorAll('#inputTableBody tr');
+      const matrix = [];
+      const students = [];
+      let hasError = false;
+
+      rows.forEach(tr => {
+        const nameInput = tr.querySelector('.student-name-input');
+        const name = nameInput.value.trim() || "Student";
+        students.push(name);
+
+        const rowScores = [];
+        tr.querySelectorAll('.score-input').forEach(inp => {
+          const isValid = validateCell(inp);
+          if (!isValid) hasError = true;
+          rowScores.push(parseFloat(inp.value) || 0);
+        });
+        matrix.push(rowScores);
+      });
+
+      if (hasError) {
+        showAlert("Please correct invalid scores. All values must be numbers between 0 and 100.", "danger");
+        return null;
+      }
+
+      if (matrix.length < 2) {
+        showAlert("At least 2 students are required for mathematical analysis.", "danger");
+        return null;
+      }
+
+      return { matrix, students, subjects: DEFAULT_SUBJECTS };
+    }
+
+    async function runFullAnalysis() {
+      const payload = extractMatrixFromUI();
+      if (!payload) return;
+
+      const spinner = document.getElementById('loadingSpinner');
+      const btn = document.getElementById('btnRunAnalysis');
+      spinner.style.display = 'flex';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Server computation failed");
+        }
+
+        lastAnalysisResults = data.results;
+        renderAnalysisResults(data.results, payload.students, payload.subjects);
+        showAlert("Analysis completed successfully across all 18 stages!", "success");
+
+        const resSection = document.getElementById('resultsSection');
+        resSection.style.display = 'block';
+        resSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      } catch (err) {
+        console.error(err);
+        showAlert(err.message, "danger");
+      } finally {
+        spinner.style.display = 'none';
+        btn.disabled = false;
+      }
+    }
+
+    async function downloadPDFReport() {
+      const payload = extractMatrixFromUI();
+      if (!payload) return;
+
+      const btn = document.getElementById('btnDownloadPDF');
+      btn.disabled = true;
+      btn.textContent = "⏳ Generating PDF...";
+
+      try {
+        const postData = {
+          matrix: payload.matrix,
+          students: payload.students,
+          subjects: payload.subjects,
+          results: lastAnalysisResults
+        };
+
+        const res = await fetch('/generate-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(postData)
+        });
+
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          throw new Error(errJson.error || "Failed to generate PDF report");
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `Student_Performance_Matrix_Report.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+
+        showAlert("PDF Report generated and downloaded successfully!", "success");
+      } catch (err) {
+        showAlert(err.message, "danger");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📄 Download PDF Report";
+      }
+    }
+
+    // =========================================================================
+    // RENDERERS FOR ALL 18 MATHEMATICAL STAGES
+    // =========================================================================
+
+    function renderAnalysisResults(res, students, subjects) {
+      // 1. KPI Cards
+      const shape = res.matrix.shape;
+      document.getElementById('kpiShape').textContent = `${shape[0]} × ${shape[1]}`;
+      document.getElementById('kpiRank').textContent = res.rank.rank;
+      document.getElementById('kpiRankSub').textContent = res.rank.is_full_rank ? "Full Column Rank" : "Rank Deficient";
+      document.getElementById('kpiCond').textContent = res.svd.condition_number ? res.svd.condition_number.toFixed(2) : "N/A";
+      
+      const kPca = res.pca.n_components;
+      const cumVar = res.pca.cumulative_variance[kPca - 1];
+      document.getElementById('kpiVariance').textContent = `${cumVar.toFixed(1)}%`;
+
+      // Stage 1: Matrix Formation
+      document.getElementById('descStage1').textContent = res.matrix.description;
+      document.getElementById('tableContainerStage1').innerHTML = buildMatrixTableHTML(res.matrix.A, subjects, students);
+
+      // Stage 2: REF
+      document.getElementById('descStage2').textContent = res.ref.description;
+      document.getElementById('tableContainerStage2').innerHTML = buildMatrixTableHTML(res.ref.REF, subjects, null, res.ref.pivot_columns);
+      const opsUl = document.getElementById('operationsListStage2');
+      opsUl.innerHTML = res.ref.operations.length > 0
+        ? res.ref.operations.map(op => `<li>${escapeHtml(op)}</li>`).join('')
+        : '<li>No row eliminations required (already in echelon form).</li>';
+
+      // Stage 3: RREF
+      document.getElementById('descStage3').textContent = res.rref.description;
+      document.getElementById('tableContainerStage3').innerHTML = buildMatrixTableHTML(res.rref.RREF, subjects, null);
+
+      // Stage 4: Rank
+      document.getElementById('descStage4').textContent = res.rank.description;
+      document.getElementById('rankAnalysisBox').innerHTML = `
+        <p><strong>Computed Rank:</strong> ${res.rank.rank}</p>
+        <p><strong>Max Possible Rank:</strong> ${res.rank.max_possible_rank}</p>
+        <p><strong>Linear Independence of Rows/Cols:</strong> ${res.rank.is_full_rank ? 'Full column rank confirmed. No non-trivial linear combinations yield zero.' : 'Matrix has redundant patterns.'}</p>
+      `;
+
+      // Stage 5: LU Decomposition
+      document.getElementById('descStage5').textContent = res.lu.description;
+      document.getElementById('tableL').innerHTML = buildMathMatrixHTML(res.lu.L);
+      document.getElementById('tableU').innerHTML = buildMathMatrixHTML(res.lu.U);
+
+      // Stage 6: Linear System
+      document.getElementById('descStage6').textContent = res.linear_system.description;
+      const sol = res.linear_system.solution_x || [];
+      const weightsHtml = sol.map((w, i) => `
+        <span style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; font-size: 0.82rem;">
+          <strong>${subjects[i] || 'Var ' + (i+1)}:</strong> ${w.toFixed(4)}
+        </span>
+      `).join(' ');
+      document.getElementById('systemSolutionBox').innerHTML = `
+        <p style="margin-bottom: 8px; font-size: 0.85rem;"><strong>Subject Weights Vector x:</strong></p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">${weightsHtml}</div>
+        ${res.linear_system.residual_norm !== undefined ? `<p style="margin-top: 8px; font-size: 0.85rem; color: #475569;">Residual Norm ||b - Ax||: <strong>${res.linear_system.residual_norm.toFixed(4)}</strong></p>` : ''}
+      `;
+
+      // Stage 7: Vector Representation & Norms
+      document.getElementById('descStage7').textContent = res.vectors.description;
+      let vecHtml = `
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Vector in ℝ⁶</th>
+              <th>L₁ Norm (Taxicab)</th>
+              <th>L₂ Norm (Euclidean)</th>
+              <th>L_∞ Norm (Chebyshev)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      res.vectors.student_vectors.forEach(sv => {
+        const name = students[sv.student - 1] || `Student ${sv.student}`;
+        const vecStr = `[${sv.vector.map(v => v.toFixed(1)).join(', ')}]`;
+        vecHtml += `
+          <tr>
+            <td style="font-weight: 600;">${escapeHtml(name)}</td>
+            <td style="font-family: monospace; font-size: 0.8rem;">${vecStr}</td>
+            <td><strong>${sv.L1_norm.toFixed(2)}</strong></td>
+            <td><strong style="color: var(--primary);">${sv.L2_norm.toFixed(2)}</strong></td>
+            <td><strong>${sv.Linf_norm.toFixed(2)}</strong></td>
+          </tr>
+        `;
+      });
+      vecHtml += '</tbody></table>';
+      document.getElementById('tableContainerStage7').innerHTML = vecHtml;
+
+      // Stage 8: Linear Independence
+      document.getElementById('descStage8').textContent = res.independence.description;
+      document.getElementById('independenceBox').innerHTML = `
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+          <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 6px; flex: 1;">
+            <p><strong>All Features Linearly Independent:</strong> ${res.independence.all_independent ? '✅ YES' : '❌ NO'}</p>
+            <p><strong>det(AᵀA):</strong> ${res.independence.det_ATA}</p>
+          </div>
+        </div>
+      `;
+
+      // Stage 9: Inner Products & Similarity Heatmap
+      document.getElementById('descStage9').textContent = res.inner_product.description;
+      document.getElementById('tableCosineSim').innerHTML = buildHeatmapTableHTML(res.inner_product.cosine_similarity, students);
+
+      // Stage 10: Gram-Schmidt
+      document.getElementById('descStage10').textContent = res.gram_schmidt.description;
+      document.getElementById('tableQ').innerHTML = buildMathMatrixHTML(res.gram_schmidt.Q);
+      document.getElementById('tableR').innerHTML = buildMathMatrixHTML(res.gram_schmidt.R);
+
+      // Stage 11: Basis & Dimension
+      document.getElementById('descStage11').textContent = res.basis.description;
+      document.getElementById('basisBox').innerHTML = `
+        <p><strong>Column Space Dimension dim(Col A):</strong> ${res.basis.column_space_dimension}</p>
+        <p><strong>Null Space Dimension (Nullity):</strong> ${res.basis.nullity}</p>
+        <p style="font-size: 1rem; color: var(--primary); font-weight: 700; margin-top: 6px;">Rank-Nullity Theorem: ${res.basis.rank_nullity_theorem}</p>
+      `;
+
+      // Stage 12: Linear Transformations
+      document.getElementById('descStage12').textContent = res.linear_transformation.description;
+      document.getElementById('tableStandardized').innerHTML = buildMatrixTableHTML(res.linear_transformation.standardized_data, subjects, students);
+      document.getElementById('tableProjectionMatrix').innerHTML = buildMathMatrixHTML(res.linear_transformation.projection_matrix);
+
+      // Stage 13: Eigenvalues & Bar Chart
+      document.getElementById('descStage13').textContent = res.eigen.description;
+      const eigenTbody = document.querySelector('#tableEigenvalues tbody');
+      eigenTbody.innerHTML = '';
+      res.eigen.eigenvalues.forEach((ev, idx) => {
+        const pct = res.eigen.variance_explained_percent[idx];
+        const cum = res.eigen.cumulative_variance_percent[idx];
+        eigenTbody.innerHTML += `
+          <tr>
+            <td><strong>λ${idx + 1}</strong></td>
+            <td style="font-family: monospace;">${ev.toFixed(4)}</td>
+            <td>${pct.toFixed(2)}%</td>
+            <td>${cum.toFixed(2)}%</td>
+          </tr>
+        `;
+      });
+      renderEigenChart(res.eigen.eigenvalues, res.eigen.variance_explained_percent);
+
+      // Stage 14: Diagonalization
+      document.getElementById('descStage14').textContent = res.diagonalization.description;
+      document.getElementById('tableDiagP').innerHTML = buildMathMatrixHTML(res.diagonalization.P);
+      document.getElementById('tableDiagD').innerHTML = buildMathMatrixHTML(res.diagonalization.D);
+
+      // Stage 15: SVD
+      document.getElementById('descStage15').textContent = res.svd.description;
+      let svdHtml = `
+        <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+          <p><strong>Singular Values (σ):</strong> [${res.svd.singular_values.map(s => s.toFixed(4)).join(', ')}]</p>
+          <p><strong>Condition Number κ(A) = σ₁/σₙ:</strong> ${res.svd.condition_number.toFixed(4)}</p>
+        </div>
+        <p style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Low-Rank Truncated Approximations:</p>
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Rank k</th>
+              <th>Frobenius Error ||A - A_k||_F</th>
+              <th>Energy Captured (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      for (const [kKey, kVal] of Object.entries(res.svd.low_rank_approximations)) {
+        svdHtml += `
+          <tr>
+            <td><strong>${kKey.toUpperCase()}</strong></td>
+            <td>${kVal.frobenius_error.toFixed(4)}</td>
+            <td><strong style="color: var(--success);">${kVal.energy_captured_percent.toFixed(2)}%</strong></td>
+          </tr>
+        `;
+      }
+      svdHtml += '</tbody></table>';
+      document.getElementById('svdApproximationsBox').innerHTML = svdHtml;
+
+      // Stage 16: PCA
+      document.getElementById('descStage16').textContent = res.pca.description;
+      let loadingsHtml = `
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              ${res.pca.loadings.map(l => `<th>PC${l.PC} (${l.variance_explained.toFixed(1)}%)</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      subjects.forEach((sub, rowIdx) => {
+        loadingsHtml += `<tr><td style="font-weight: 600; text-align: left;">${sub}</td>`;
+        res.pca.loadings.forEach(l => {
+          const val = l.loadings[rowIdx];
+          loadingsHtml += `<td style="font-family: monospace;">${val !== undefined ? val.toFixed(4) : '--'}</td>`;
+        });
+        loadingsHtml += '</tr>';
+      });
+      loadingsHtml += '</tbody></table>';
+      document.getElementById('tablePcaLoadings').innerHTML = loadingsHtml;
+
+      // PCA Scores
+      let scoresHtml = `
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              ${Array.from({ length: res.pca.n_components }).map((_, i) => `<th>PC${i+1} Score</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      res.pca.scores.forEach((row, i) => {
+        scoresHtml += `<tr><td style="font-weight: 600; text-align: left;">${students[i] || 'Student ' + (i+1)}</td>`;
+        row.forEach(val => {
+          scoresHtml += `<td style="font-family: monospace;">${val.toFixed(3)}</td>`;
+        });
+        scoresHtml += '</tr>';
+      });
+      scoresHtml += '</tbody></table>';
+      document.getElementById('tablePcaScores').innerHTML = scoresHtml;
+
+      renderScreeChart(res.pca.variance_explained, res.pca.cumulative_variance);
+
+      // Stage 17: Projection
+      document.getElementById('descStage17').textContent = res.projection.description;
+      let projHtml = `
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Residual Norm ||r||</th>
+              <th>Orthogonality Check ⟨proj, r⟩</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      res.projection.projections.forEach((p, idx) => {
+        projHtml += `
+          <tr>
+            <td style="font-weight: 600;">${students[idx] || 'Student ' + (idx+1)}</td>
+            <td style="font-family: monospace;">${p.residual_norm.toFixed(4)}</td>
+            <td style="font-family: monospace; color: ${Math.abs(p.orthogonality_check) < 1e-6 ? 'var(--success)' : 'inherit'};">
+              ${p.orthogonality_check.toFixed(8)} (≈ 0)
+            </td>
+          </tr>
+        `;
+      });
+      projHtml += '</tbody></table>';
+      document.getElementById('tableProjections').innerHTML = projHtml;
+
+      // Stage 18: Markov Chain
+      document.getElementById('descStage18').textContent = res.markov.description;
+      document.getElementById('tableMarkovP').innerHTML = buildMatrixTableHTML(res.markov.transition_matrix, res.markov.states, res.markov.states);
+      
+      const steady = res.markov.steady_state;
+      const steadyPills = res.markov.states.map((st, i) => `
+        <span style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">
+          <strong>${st}:</strong> ${(steady[i] * 100).toFixed(1)}%
+        </span>
+      `).join(' ');
+      document.getElementById('markovSteadyStateBox').innerHTML = `
+        <p style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Equilibrium Steady-State Distribution (q = Pq):</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">${steadyPills}</div>
+      `;
+
+      renderMarkovChart(res.markov.state_evolution, res.markov.states);
+    }
+
+    // =========================================================================
+    // CHART RENDERING (CHART.JS)
+    // =========================================================================
+
+    function renderEigenChart(eigenvalues, variancePct) {
+      const ctx = document.getElementById('chartEigenvalues').getContext('2d');
+      if (chartEigenInstance) chartEigenInstance.destroy();
+
+      const labels = eigenvalues.map((_, i) => `λ${i+1}`);
+      chartEigenInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Variance Explained (%)',
+            data: variancePct,
+            backgroundColor: 'rgba(57, 73, 171, 0.75)',
+            borderColor: '#1a237e',
+            borderWidth: 1.5,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Eigenvalue Variance Explained', font: { weight: 'bold' } },
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Variance (%)' } }
+          }
+        }
+      });
+    }
+
+    function renderScreeChart(varianceExplained, cumVariance) {
+      const ctx = document.getElementById('chartScree').getContext('2d');
+      if (chartScreeInstance) chartScreeInstance.destroy();
+
+      const labels = varianceExplained.map((_, i) => `PC${i+1}`);
+      chartScreeInstance = new Chart(ctx, {
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Cumulative Variance (%)',
+              data: cumVariance,
+              borderColor: '#d81b60',
+              backgroundColor: 'rgba(216, 27, 96, 0.1)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              fill: false,
+              yAxisID: 'y'
+            },
+            {
+              type: 'bar',
+              label: 'Individual Variance (%)',
+              data: varianceExplained,
+              backgroundColor: 'rgba(0, 137, 123, 0.7)',
+              borderColor: '#00796b',
+              borderWidth: 1.5,
+              borderRadius: 4,
+              yAxisID: 'y'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'PCA Scree Plot & Cumulative Variance', font: { weight: 'bold' } }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 105, title: { display: true, text: 'Percentage (%)' } }
+          }
+        }
+      });
+    }
+
+    function renderMarkovChart(statesEvolution, stateLabels) {
+      const ctx = document.getElementById('chartMarkov').getContext('2d');
+      if (chartMarkovInstance) chartMarkovInstance.destroy();
+
+      const stepsLabels = statesEvolution.map((_, i) => `Step ${i}`);
+      const colors = ['#e53935', '#fb8c00', '#1e88e5', '#43a047'];
+
+      const datasets = stateLabels.map((lbl, sIdx) => {
+        return {
+          label: lbl.split(' ')[0],
+          data: statesEvolution.map(step => (step[sIdx] * 100).toFixed(1)),
+          borderColor: colors[sIdx % colors.length],
+          backgroundColor: colors[sIdx % colors.length],
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false
+        };
+      });
+
+      chartMarkovInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: stepsLabels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Markov Chain State Progression Evolution', font: { weight: 'bold' } }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Probability (%)' } }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // HTML TABLE & MATRIX BUILDERS
+    // =========================================================================
+
+    function buildMatrixTableHTML(matrix, colHeaders, rowHeaders, pivotCols = []) {
+      if (!matrix || matrix.length === 0) return '<p>No data</p>';
+      let html = '<table class="matrix-table"><thead><tr>';
+      if (rowHeaders) html += '<th>#</th>';
+      colHeaders.forEach((ch, idx) => {
+        const isPivot = pivotCols.includes(idx);
+        html += `<th class="${isPivot ? 'pivot-cell' : ''}">${escapeHtml(ch)}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      matrix.forEach((row, rIdx) => {
+        html += '<tr>';
+        if (rowHeaders) {
+          html += `<td style="font-weight: 600; text-align: left;">${escapeHtml(rowHeaders[rIdx] || 'R' + (rIdx + 1))}</td>`;
+        }
+        row.forEach((val, cIdx) => {
+          const isPivot = pivotCols.includes(cIdx) && Math.abs(val) > 1e-6;
+          html += `<td class="${isPivot ? 'pivot-cell' : ''}">${typeof val === 'number' ? (Math.abs(val) < 0.0001 && val !== 0 ? val.toExponential(2) : val.toFixed(2)) : val}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function buildMathMatrixHTML(matrix) {
+      if (!matrix || matrix.length === 0) return '';
+      let html = '<table class="math-matrix"><tbody>';
+      matrix.forEach(row => {
+        html += '<tr>';
+        row.forEach(val => {
+          const str = typeof val === 'number'
+            ? (Math.abs(val) < 0.0001 && val !== 0 ? val.toExponential(2) : val.toFixed(2))
+            : val;
+          html += `<td>${str}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function buildHeatmapTableHTML(matrix, names) {
+      if (!matrix || matrix.length === 0) return '';
+      let html = '<table class="matrix-table"><thead><tr><th>Student</th>';
+      names.forEach(n => { html += `<th>${escapeHtml(n)}</th>`; });
+      html += '</tr></thead><tbody>';
+
+      matrix.forEach((row, i) => {
+        html += `<tr><td style="font-weight: 600; text-align: left;">${escapeHtml(names[i] || 'S' + (i+1))}</td>`;
+        row.forEach((val, j) => {
+          // Cosine similarity coloring: 0.8 to 1.0 mapped to cool blue -> orange -> deep red
+          const normVal = Math.max(0, Math.min(1, (val - 0.8) / 0.2));
+          let bg, color = '#1e293b';
+          if (normVal >= 0.85) {
+            bg = `rgba(239, 83, 80, ${0.4 + normVal * 0.55})`;
+            if (normVal >= 0.95) color = '#ffffff';
+          } else if (normVal >= 0.5) {
+            bg = `rgba(255, 183, 77, ${0.3 + normVal * 0.5})`;
+          } else {
+            bg = `rgba(66, 165, 245, ${0.2 + normVal * 0.4})`;
+          }
+
+          html += `
+            <td style="background-color: ${bg}; color: ${color};" class="heatmap-cell" title="${names[i]} - ${names[j]}: ${val.toFixed(4)}">
+              ${val.toFixed(3)}
+            </td>
+          `;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
